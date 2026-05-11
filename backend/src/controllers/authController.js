@@ -58,7 +58,7 @@ const register = async (req, res) => {
     res.status(201).json({ success: true, message: 'Account created successfully', data: { user, accessToken, refreshToken } });
   } catch (err) {
     console.error('Register error:', err);
-    if (err.code === 'SQLITE_CONSTRAINT') {
+    if (err.code === 'SQLITE_CONSTRAINT' || err.code === '23505') {
       return res.status(409).json({ success: false, message: 'Email or Student ID already registered' });
     }
     res.status(500).json({ success: false, message: 'Registration failed' });

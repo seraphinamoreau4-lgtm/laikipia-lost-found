@@ -1,7 +1,14 @@
 import axios from 'axios';
 
+const backendRoot = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000' : undefined);
+const baseURL = backendRoot ? `${backendRoot.replace(/\/$/, '')}/api` : '/api';
+
+if (!import.meta.env.VITE_API_URL && !import.meta.env.DEV) {
+  console.error('Missing VITE_API_URL. In production you must set VITE_API_URL to your backend root URL.');
+}
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL,
   timeout: 30000,
   headers: { 'Content-Type': 'application/json' }
 });

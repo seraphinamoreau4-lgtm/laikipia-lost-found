@@ -51,8 +51,13 @@ app.set('io', io);
 
 // ─── MIDDLEWARE ───────────────────────────────────────────────
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
+const corsOrigin = process.env.FRONTEND_URL || true;
+if (!process.env.FRONTEND_URL && process.env.NODE_ENV === 'production') {
+  console.warn('⚠️ FRONTEND_URL is not set. CORS will allow all origins. Set FRONTEND_URL in production.');
+}
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: corsOrigin,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']
 }));

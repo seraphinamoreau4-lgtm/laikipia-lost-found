@@ -89,18 +89,16 @@ function UsersTab() {
                 </td>
                 <td style={{ padding: '12px 16px', color: 'var(--text-secondary)' }}>{u.item_count}</td>
                 <td style={{ padding: '12px 16px' }}>
-                  <span style={{
-                    padding: '3px 10px', borderRadius: 99, fontSize: 11, fontWeight: 600,
-                    background: u.is_active ? '#D1FAE5' : '#FEE2E2',
-                    color: u.is_active ? '#065F46' : '#B91C1C'
-                  }}>{u.is_active ? 'Active' : 'Inactive'}</span>
+                  <span className={`badge ${u.is_active ? 'badge-active' : 'badge-inactive'}`} style={{ padding: '3px 10px', borderRadius: 99, fontSize: 11, fontWeight: 600 }}>
+                    {u.is_active ? 'Active' : 'Inactive'}
+                  </span>
                 </td>
                 <td style={{ padding: '12px 16px', color: 'var(--text-muted)', fontSize: 11 }}>
                   {format(new Date(u.created_at), 'MMM d, yyyy')}
                 </td>
                 <td style={{ padding: '12px 16px' }}>
-                  <button className="btn btn-sm" onClick={() => toggleActive(u.id, u.is_active)}
-                    style={{ fontSize: 11, padding: '5px 10px', background: u.is_active ? '#FEE2E2' : '#D1FAE5', color: u.is_active ? '#B91C1C' : '#065F46', border: 'none' }}>
+                  <button className={`btn btn-sm ${u.is_active ? 'btn-deactivate' : 'btn-activate'}`} onClick={() => toggleActive(u.id, u.is_active)}
+                    style={{ fontSize: 11, padding: '5px 10px' }}>
                     {u.is_active ? 'Deactivate' : 'Activate'}
                   </button>
                 </td>
@@ -198,10 +196,8 @@ function ClaimsTab({ onCountChange }) {
                 )}
 
                 {claim.status !== 'pending' && (
-                  <div style={{
+                  <div className={`badge ${claim.status === 'approved' ? 'badge-approved' : 'badge-rejected'}`} style={{
                     padding: '10px 14px', borderRadius: 'var(--radius-md)',
-                    background: claim.status === 'approved' ? '#D1FAE5' : '#FEE2E2',
-                    color: claim.status === 'approved' ? '#065F46' : '#B91C1C',
                     fontSize: 13, fontWeight: 600
                   }}>
                     {claim.status === 'approved' ? '✅' : '❌'} {claim.status.charAt(0).toUpperCase() + claim.status.slice(1)}
@@ -231,15 +227,15 @@ function OverviewTab() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16, marginBottom: 28 }}>
         {[
           { label: 'Total Lost Reports', value: stats.total_lost, color: 'var(--navy)' },
-          { label: 'Total Found Reports', value: stats.total_found, color: 'var(--success)' },
-          { label: 'Resolved Items', value: stats.total_resolved, color: 'var(--gold)' },
-          { label: 'Recovery Rate', value: `${stats.recovery_rate}%`, color: '#5B21B6' },
-          { label: 'Today\'s Reports', value: stats.today_items, color: 'var(--info)' },
-          { label: 'Registered Users', value: stats.total_users, color: 'var(--navy)' },
-          { label: 'Pending Claims', value: stats.pending_claims, color: 'var(--danger)' },
+          { label: 'Total Found Reports', value: stats.total_found, colorClass: 'stat-color-success' },
+          { label: 'Resolved Items', value: stats.total_resolved, colorClass: 'stat-color-gold' },
+          { label: 'Recovery Rate', value: `${stats.recovery_rate}%`, colorClass: 'stat-color-purple' },
+          { label: 'Today\'s Reports', value: stats.today_items, colorClass: 'stat-color-info' },
+          { label: 'Registered Users', value: stats.total_users, colorClass: 'stat-color-navy' },
+          { label: 'Pending Claims', value: stats.pending_claims, colorClass: 'stat-color-danger' },
         ].map((s, i) => (
           <div key={i} className="card" style={{ padding: '18px 20px' }}>
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: 32, color: s.color }}>{s.value}</div>
+            <div className={s.colorClass} style={{ fontFamily: 'var(--font-display)', fontSize: 32 }}>{s.value}</div>
             <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>{s.label}</div>
           </div>
         ))}
@@ -303,6 +299,15 @@ function AuditTab() {
 
   const actionColors = { CREATE_ITEM: '#065F46', DELETE_ITEM: '#B91C1C', UPDATE_ITEM: '#92400E' };
 
+  const getActionClass = (action) => {
+    switch (action) {
+      case 'CREATE_ITEM': return 'badge-create';
+      case 'DELETE_ITEM': return 'badge-delete';
+      case 'UPDATE_ITEM': return 'badge-update';
+      default: return 'badge';
+    }
+  };
+
   return (
     <div className="card" style={{ overflow: 'hidden' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
@@ -318,7 +323,7 @@ function AuditTab() {
             : logs.map(log => (
               <tr key={log.id} style={{ borderTop: '1px solid var(--cream-dark)' }}>
                 <td style={{ padding: '10px 14px' }}>
-                  <span style={{ padding: '2px 8px', borderRadius: 4, fontSize: 10, fontWeight: 700, background: `${actionColors[log.action] || '#6B7280'}22`, color: actionColors[log.action] || '#6B7280', fontFamily: 'monospace' }}>
+                  <span className={`badge ${getActionClass(log.action)}`} style={{ padding: '2px 8px', borderRadius: 4, fontSize: 10, fontWeight: 700, fontFamily: 'monospace' }}>
                     {log.action}
                   </span>
                 </td>

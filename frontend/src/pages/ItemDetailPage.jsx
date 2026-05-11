@@ -7,11 +7,14 @@ import { itemsAPI } from '../services/api';
 import useAuthStore from '../store/authStore';
 
 function ConfidenceBadge({ score }) {
-  const color = score >= 70 ? '#065F46' : score >= 45 ? '#92400E' : '#1E40AF';
-  const bg = score >= 70 ? '#D1FAE5' : score >= 45 ? '#FEF3C7' : '#DBEAFE';
+  const getBadgeClass = () => {
+    if (score >= 70) return 'badge-high-match';
+    if (score >= 45) return 'badge-possible-match';
+    return 'badge-weak-match';
+  };
   const label = score >= 70 ? 'High Match' : score >= 45 ? 'Possible Match' : 'Weak Match';
   return (
-    <span style={{ background: bg, color, fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 99 }}>
+    <span className={`badge ${getBadgeClass()}`} style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 99 }}>
       {label} · {Math.round(score)}%
     </span>
   );
@@ -236,8 +239,8 @@ export default function ItemDetailPage() {
               <div className="flex items-center gap-3" style={{ marginBottom: 16 }}>
                 <span className={`badge badge-${item.type}`}>{item.type === 'lost' ? '🔍 Lost' : '✅ Found'}</span>
                 <span className={`badge badge-${item.status}`}>{item.status}</span>
-                {item.is_valuable && <span className="badge" style={{ background: '#FEF3C7', color: '#92400E' }}>💎 Valuable</span>}
-                {item.reward_offered && <span className="badge" style={{ background: '#FFF0F3', color: '#9D174D' }}>
+                {item.is_valuable && <span className="badge badge-valuable">💎 Valuable</span>}
+                {item.reward_offered && <span className="badge badge-reward">
                   🏆 Reward: KSh {parseFloat(item.reward_amount || 0).toLocaleString()}
                 </span>}
               </div>

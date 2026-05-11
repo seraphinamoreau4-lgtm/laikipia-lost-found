@@ -6,14 +6,14 @@ import { itemsAPI } from '../services/api';
 import useAuthStore from '../store/authStore';
 import ItemCard from '../components/items/ItemCard';
 
-function StatCard({ icon, label, value, sub, color = 'var(--navy)', bg = 'white' }) {
+function StatCard({ icon, label, value, sub, colorClass = 'stat-icon-default', bg = 'white' }) {
   return (
     <div className="card" style={{ padding: '22px 24px', background: bg }}>
       <div className="flex items-center justify-between" style={{ marginBottom: 14 }}>
         <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</div>
-        <div style={{ color, opacity: 0.7 }}>{icon}</div>
+        <div className={colorClass} style={{ opacity: 0.7 }}>{icon}</div>
       </div>
-      <div style={{ fontFamily: 'var(--font-display)', fontSize: 38, color, lineHeight: 1 }}>{value}</div>
+      <div className={colorClass} style={{ fontFamily: 'var(--font-display)', fontSize: 38, lineHeight: 1 }}>{value}</div>
       {sub && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>{sub}</div>}
     </div>
   );
@@ -88,9 +88,9 @@ export default function DashboardPage() {
         {/* My Stats */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 32 }}>
           <StatCard icon={<Package size={20} />} label="My Lost Reports" value={myLost} sub="Items reported lost" />
-          <StatCard icon={<CheckCircle size={20} />} label="My Found Reports" value={myFound} sub="Items I found" color="var(--success)" />
-          <StatCard icon={<TrendingUp size={20} />} label="Resolved" value={myResolved} sub="Successful reunions" color="var(--gold)" />
-          <StatCard icon={<Sparkles size={20} />} label="AI Matches" value={myMatches} sub="Potential matches found" color="#5B21B6" />
+          <StatCard icon={<CheckCircle size={20} />} label="My Found Reports" value={myFound} sub="Items I found" colorClass="stat-icon-success" />
+          <StatCard icon={<TrendingUp size={20} />} label="Resolved" value={myResolved} sub="Successful reunions" colorClass="stat-icon-gold" />
+          <StatCard icon={<Sparkles size={20} />} label="AI Matches" value={myMatches} sub="Potential matches found" colorClass="stat-icon-purple" />
         </div>
 
         {/* Platform Stats teaser */}

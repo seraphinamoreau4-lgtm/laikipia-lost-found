@@ -83,6 +83,18 @@ body.dark-mode {
   --text-light: #8294B0;
   --border: #1C2C42;
   --border-dark: #314462;
+
+  /* Badge colors for dark mode */
+  --badge-lost-bg: #2D1B1B;
+  --badge-lost-text: #F87171;
+  --badge-found-bg: #1B2D1B;
+  --badge-found-text: #4ADE80;
+  --badge-open-bg: #2D251B;
+  --badge-open-text: #F59E0B;
+  --badge-resolved-bg: #1B2D1B;
+  --badge-resolved-text: #4ADE80;
+  --badge-matched-bg: #2D1B3D;
+  --badge-matched-text: #A78BFA;
 }
 
 /* ─── SCROLLBAR ─────────────────────────────────────────── */
@@ -200,6 +212,76 @@ a:hover { color: var(--gold); }
 .badge-open { background: var(--gold-pale); color: #92400E; }
 .badge-resolved { background: #D1FAE5; color: #065F46; }
 .badge-matched { background: #EDE9FE; color: #5B21B6; }
+
+body.dark-mode .badge-lost { background: var(--badge-lost-bg); color: var(--badge-lost-text); }
+body.dark-mode .badge-found { background: var(--badge-found-bg); color: var(--badge-found-text); }
+body.dark-mode .badge-open { background: var(--badge-open-bg); color: var(--badge-open-text); }
+body.dark-mode .badge-resolved { background: var(--badge-resolved-bg); color: var(--badge-resolved-text); }
+body.dark-mode .badge-matched { background: var(--badge-matched-bg); color: var(--badge-matched-text); }
+
+.badge-valuable { background: #FEF3C7; color: #92400E; }
+.badge-reward { background: #FFF0F3; color: #9D174D; }
+
+body.dark-mode .badge-valuable { background: #2D251B; color: #F59E0B; }
+body.dark-mode .badge-reward { background: #2D1B2D; color: #F472B6; }
+
+.badge-active { background: #D1FAE5; color: #065F46; }
+.badge-inactive { background: #FEE2E2; color: #B91C1C; }
+
+body.dark-mode .badge-active { background: var(--badge-found-bg); color: var(--badge-found-text); }
+body.dark-mode .badge-inactive { background: var(--badge-lost-bg); color: var(--badge-lost-text); }
+
+.btn-activate { background: #D1FAE5; color: #065F46; border: none; }
+.btn-deactivate { background: #FEE2E2; color: #B91C1C; border: none; }
+
+body.dark-mode .btn-activate { background: var(--badge-found-bg); color: var(--badge-found-text); }
+body.dark-mode .btn-deactivate { background: var(--badge-lost-bg); color: var(--badge-lost-text); }
+
+.badge-approved { background: #D1FAE5; color: #065F46; }
+.badge-rejected { background: #FEE2E2; color: #B91C1C; }
+
+body.dark-mode .badge-approved { background: var(--badge-found-bg); color: var(--badge-found-text); }
+body.dark-mode .badge-rejected { background: var(--badge-lost-bg); color: var(--badge-lost-text); }
+
+.badge-create { background: #065F4622; color: #065F46; }
+.badge-delete { background: #B91C1C22; color: #B91C1C; }
+.badge-update { background: #92400E22; color: #92400E; }
+
+body.dark-mode .badge-create { background: #065F4622; color: #4ADE80; }
+body.dark-mode .badge-delete { background: #B91C1C22; color: #F87171; }
+body.dark-mode .badge-update { background: #92400E22; color: #F59E0B; }
+
+.stat-icon-default { color: var(--navy); }
+.stat-icon-success { color: var(--success); }
+.stat-icon-gold { color: var(--gold); }
+.stat-icon-purple { color: #5B21B6; }
+
+body.dark-mode .stat-icon-default { color: var(--text-primary); }
+body.dark-mode .stat-icon-success { color: #4ADE80; }
+body.dark-mode .stat-icon-gold { color: #F59E0B; }
+body.dark-mode .stat-icon-purple { color: #A78BFA; }
+
+.badge-high-match { background: #D1FAE5; color: #065F46; }
+.badge-possible-match { background: #FEF3C7; color: #92400E; }
+.badge-weak-match { background: #DBEAFE; color: #1E40AF; }
+
+body.dark-mode .badge-high-match { background: var(--badge-found-bg); color: var(--badge-found-text); }
+body.dark-mode .badge-possible-match { background: #2D251B; color: #F59E0B; }
+body.dark-mode .badge-weak-match { background: #1E1B2D; color: #93C5FD; }
+
+.stat-color-success { color: var(--success); }
+.stat-color-gold { color: var(--gold); }
+.stat-color-purple { color: #5B21B6; }
+.stat-color-info { color: var(--info); }
+.stat-color-navy { color: var(--navy); }
+.stat-color-danger { color: var(--danger); }
+
+body.dark-mode .stat-color-success { color: #4ADE80; }
+body.dark-mode .stat-color-gold { color: #F59E0B; }
+body.dark-mode .stat-color-purple { color: #A78BFA; }
+body.dark-mode .stat-color-info { color: #60A5FA; }
+body.dark-mode .stat-color-navy { color: var(--text-primary); }
+body.dark-mode .stat-color-danger { color: #F87171; }
 .badge-navy { background: var(--navy); color: white; }
 
 /* ─── LAYOUT ────────────────────────────────────────────── */

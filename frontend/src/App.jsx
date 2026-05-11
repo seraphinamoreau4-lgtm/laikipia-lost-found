@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Moon, Sun } from 'lucide-react';
 import { Toaster } from 'react-hot-toast';
 import useAuthStore from './store/authStore';
 
@@ -30,11 +31,24 @@ function PublicRoute({ children }) {
 
 export default function App() {
   const { initAuth, fetchMe, isAuthenticated } = useAuthStore();
+  const [theme, setTheme] = useState(() => {
+    if (typeof window === 'undefined') return 'light';
+    const storedTheme = window.localStorage.getItem('theme');
+    return storedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  });
 
   useEffect(() => {
     initAuth();
     if (isAuthenticated) fetchMe();
   }, []);
+
+  useEffect(() => {
+    const isDark = theme === 'dark';
+    document.body.classList.toggle('dark-mode', isDark);
+    window.localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
 
   return (
     <BrowserRouter>
@@ -43,17 +57,39 @@ export default function App() {
         toastOptions={{
           duration: 4000,
           style: {
-            background: '#0F1F3D',
-            color: 'white',
+            background: 'var(--surface)',
+            color: 'var(--text-primary)',
             fontFamily: "'Outfit', sans-serif",
             fontSize: '14px',
             borderRadius: '12px',
-            boxShadow: '0 10px 30px rgba(15,31,61,0.3)',
+            boxShadow: '0 10px 30px rgba(15, 31, 61, 0.18)',
           },
-          success: { style: { background: '#065F46', color: 'white' } },
-          error: { style: { background: '#B91C1C', color: 'white' } },
+          success: { style: { background: 'var(--success)', color: 'white' } },
+          error: { style: { background: 'var(--danger)', color: 'white' } },
         }}
       />
+      <button
+        onClick={toggleTheme}
+        title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+        style={{
+          position: 'fixed',
+          right: '16px',
+          bottom: '16px',
+          zIndex: 1000,
+          width: '46px',
+          height: '46px',
+          borderRadius: '50%',
+          border: 'none',
+          background: 'var(--surface)',
+          color: 'var(--navy)',
+          boxShadow: '0 12px 30px rgba(15, 31, 61, 0.18)',
+          cursor: 'pointer',
+          display: 'grid',
+          placeItems: 'center',
+        }}
+      >
+        {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+      </button>
       <Routes>
         {/* Public */}
         <Route path="/" element={<LandingPage />} />

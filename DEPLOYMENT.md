@@ -91,6 +91,8 @@ git push -u origin main
    ```
    VITE_API_URL=https://laikipia-lost-found-backend-xxxxx.onrender.com
    ```
+   > Important: Use the backend root URL only, without `/api`. The frontend automatically appends `/api`.
+   > Use `https://` when the frontend is served over HTTPS.
 6. Click **"Deploy"** and wait 1-2 minutes
 
 **Frontend will be live at:** `https://laikipia-lost-found.vercel.app`
