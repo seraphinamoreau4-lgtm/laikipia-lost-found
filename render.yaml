@@ -8,15 +8,20 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: laikipia-db
+          property: connectionString
       - key: JWT_SECRET
         generateValue: true
       - key: ANTHROPIC_API_KEY
         sync: false
       - key: FRONTEND_URL
         value: https://your-vercel-url.vercel.app
-    databaseId: laikipia-db
+      - key: PORT
+        value: "5000"
 databases:
   - name: laikipia-db
     engine: postgres
-    version: latest
+    version: 15
     plan: free
