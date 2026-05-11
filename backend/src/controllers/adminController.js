@@ -47,19 +47,28 @@ const updateUser = async (req, res) => {
 // GET /api/admin/claims
 const getClaims = async (req, res) => {
   try {
-    const { status = 'pending' } = req.query;
-    const claims = await query(`
-      SELECT cl.*, i.title as item_title, i.type as item_type,
-             u.full_name as claimant_name, u.student_id as claimant_student_id,
+    const { status = 'pending', verification_status } = req.query;
+    let queryStr = `
+      SELECT cl.*, i.title as item_title, i.type as item_type, i.contact_phone as item_contact,
+             u.full_name as claimant_name, u.student_id as claimant_student_id, u.email as claimant_email, u.phone as claimant_phone,
              owner.full_name as owner_name,
              (SELECT url FROM item_images WHERE item_id = i.id AND is_primary = 1 LIMIT 1) as item_image
       FROM claims cl
       JOIN items i ON i.id = cl.item_id
       JOIN users u ON u.id = cl.claimant_id
       JOIN users owner ON owner.id = i.user_id
-      WHERE cl.status = ?
-      ORDER BY cl.created_at DESC
-    `, [status]);
+      WHERE cl.status = ?`;
+    
+    let params = [status];
+    
+    if (verification_status) {
+      queryStr += ' AND cl.identity_verification_status = ?';
+      params.push(verification_status);
+    }
+    
+    queryStr += ' ORDER BY cl.created_at DESC';
+    
+    const claims = await query(queryStr, params);
     res.json({ success: true, data: claims });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Failed to fetch claims' });
@@ -122,4 +131,61 @@ const getAuditLog = async (req, res) => {
   }
 };
 
-module.exports = { getUsers, updateUser, getClaims, reviewClaim, getAuditLog };
+// PUT /api/admin/claims/:id/verify-identity
+const verifyIdentity = async (req, res) => {
+  try {
+    const { admin_note } = req.body;
+    const claim = await queryOne(`
+      SELECT cl.*, i.user_id as item_owner_id, i.title as item_title
+      FROM claims cl JOIN items i ON i.id = cl.item_id WHERE cl.id = ?
+    `, [req.params.id]);
+    if (!claim) return res.status(404).json({ success: false, message: 'Claim not found' });
+
+    await query(
+      'UPDATE claims SET identity_verification_status = ?, reviewed_by = ?, reviewed_at = NOW() WHERE id = ?',
+      ['verified', req.user.id, claim.id]
+    );
+
+    // Notify claimant that identity is verified
+    await query(
+      "INSERT INTO notifications (user_id, type, title, body) VALUES (?, 'system', ?, ?)",
+      [claim.claimant_id, 'Identity Verified ✓', 'Your identity has been verified. Your claim is now under final review.']
+    );
+
+    res.json({ success: true, message: 'Identity verified successfully' });
+  } catch (err) {
+    console.error('Verify identity error:', err);
+    res.status(500).json({ success: false, message: 'Failed to verify identity' });
+  }
+};
+
+// PUT /api/admin/claims/:id/reject-identity
+const rejectIdentity = async (req, res) => {
+  try {
+    const { admin_note } = req.body;
+    const claim = await queryOne(`
+      SELECT cl.*, i.title as item_title
+      FROM claims cl JOIN items i ON i.id = cl.item_id WHERE cl.id = ?
+    `, [req.params.id]);
+    if (!claim) return res.status(404).json({ success: false, message: 'Claim not found' });
+
+    await query(
+      'UPDATE claims SET identity_verification_status = ?, status = ?, admin_note = ?, reviewed_by = ?, reviewed_at = NOW() WHERE id = ?',
+      ['rejected', 'rejected', admin_note || 'Identity verification failed', req.user.id, claim.id]
+    );
+
+    // Notify claimant that identity verification failed
+    await query(
+      "INSERT INTO notifications (user_id, type, title, body) VALUES (?, 'system', ?, ?)",
+      [claim.claimant_id, 'Identity Verification Failed', 
+       `Your identity verification for "${claim.item_title}" could not be completed. Please try again with valid documents.`]
+    );
+
+    res.json({ success: true, message: 'Identity verification rejected' });
+  } catch (err) {
+    console.error('Reject identity error:', err);
+    res.status(500).json({ success: false, message: 'Failed to reject identity' });
+  }
+};
+
+module.exports = { getUsers, updateUser, getClaims, reviewClaim, verifyIdentity, rejectIdentity, getAuditLog };

@@ -20,18 +20,28 @@ function ConfidenceBadge({ score }) {
 function ClaimModal({ item, onClose }) {
   const [proof, setProof] = useState('');
   const [proofImage, setProofImage] = useState(null);
+  const [identityDocument, setIdentityDocument] = useState(null);
+  const [verificationAnswers, setVerificationAnswers] = useState('');
   const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState(1); // Step 1: Proof, Step 2: Identity
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!proof.trim()) { toast.error('Please describe your proof of ownership'); return; }
+    if (step === 1) {
+      setStep(2);
+      return;
+    }
+    
     setLoading(true);
     try {
       const fd = new FormData();
       fd.append('proof_description', proof);
       if (proofImage) fd.append('proof_image', proofImage);
+      fd.append('identity_document', identityDocument || '');
+      fd.append('verification_answers', verificationAnswers);
       await itemsAPI.claim(item.id, fd);
-      toast.success('Claim submitted! We will review and notify you.');
+      toast.success('Claim submitted! We will review your identity and notify you.');
       onClose();
     } catch (err) {
       toast.error(err.message);
@@ -45,27 +55,58 @@ function ClaimModal({ item, onClose }) {
       position: 'fixed', inset: 0, background: 'rgba(15,31,61,0.6)', backdropFilter: 'blur(4px)',
       zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20
     }} onClick={onClose}>
-      <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-xl)', padding: '32px', maxWidth: 480, width: '100%', boxShadow: 'var(--shadow-xl)' }}
+      <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-xl)', padding: '32px', maxWidth: 520, width: '100%', boxShadow: 'var(--shadow-xl)' }}
         onClick={e => e.stopPropagation()}>
-        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 24, color: 'var(--navy)', marginBottom: 8 }}>Submit a Claim</h2>
+        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 24, color: 'var(--navy)', marginBottom: 8 }}>
+          {step === 1 ? 'Submit a Claim' : 'Verify Your Identity'}
+        </h2>
         <p style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 24 }}>
-          Prove that this item belongs to you. An admin will review your claim.
+          {step === 1 
+            ? 'Prove that this item belongs to you. An admin will review your claim.' 
+            : 'Upload your identity document and answer verification questions.'}
         </p>
+        
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div className="form-group">
-            <label className="form-label">Proof of Ownership *</label>
-            <textarea className="form-textarea" rows={4} value={proof} onChange={e => setProof(e.target.value)}
-              placeholder="Describe unique features, serial numbers, contents, or anything that proves this is yours…" required />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Supporting Photo (optional)</label>
-            <input type="file" accept="image/*" onChange={e => setProofImage(e.target.files[0])}
-              style={{ fontSize: 13, color: 'var(--text-secondary)' }} />
-          </div>
+          {step === 1 && (
+            <>
+              <div className="form-group">
+                <label className="form-label">Proof of Ownership *</label>
+                <textarea className="form-textarea" rows={4} value={proof} onChange={e => setProof(e.target.value)}
+                  placeholder="Describe unique features, serial numbers, contents, or anything that proves this is yours…" required />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Supporting Photo (optional)</label>
+                <input type="file" accept="image/*" onChange={e => setProofImage(e.target.files[0])}
+                  style={{ fontSize: 13, color: 'var(--text-secondary)' }} />
+              </div>
+            </>
+          )}
+          
+          {step === 2 && (
+            <>
+              <div className="form-group">
+                <label className="form-label">Identity Document * (Student/Staff ID)</label>
+                <input type="file" accept="image/*" onChange={e => setIdentityDocument(e.target.files[0])}
+                  required style={{ fontSize: 13, color: 'var(--text-secondary)' }} />
+                <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>
+                  Upload a clear photo of your Student ID, Staff ID, or National ID to verify your identity.
+                </p>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Verification Questions</label>
+                <textarea className="form-textarea" rows={3} value={verificationAnswers} onChange={e => setVerificationAnswers(e.target.value)}
+                  placeholder="Answer: Where did you purchase this item? What are the unique characteristics? Any other identifying marks?" />
+              </div>
+            </>
+          )}
+          
           <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
-            <button type="button" className="btn btn-outline" style={{ flex: 1, justifyContent: 'center' }} onClick={onClose}>Cancel</button>
+            <button type="button" className="btn btn-outline" style={{ flex: 1, justifyContent: 'center' }} 
+              onClick={() => step === 2 ? setStep(1) : onClose()}>
+              {step === 2 ? 'Back' : 'Cancel'}
+            </button>
             <button type="submit" className="btn btn-primary" style={{ flex: 2, justifyContent: 'center' }} disabled={loading}>
-              {loading ? <><div className="spinner" /> Submitting…</> : 'Submit Claim'}
+              {loading ? <><div className="spinner" /> Submitting…</> : step === 1 ? 'Continue to Verification' : 'Submit Claim'}
             </button>
           </div>
         </form>
@@ -317,7 +358,7 @@ export default function ItemDetailPage() {
             {/* Reporter */}
             <div className="card" style={{ padding: '20px 22px' }}>
               <h3 style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 14 }}>Reported By</h3>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3" style={{ marginBottom: 14 }}>
                 <div className="avatar avatar-lg" style={{ background: 'var(--navy)', color: 'var(--gold-light)', fontSize: 18, fontWeight: 700 }}>
                   {item.reporter_name?.split(' ').map(n => n[0]).join('').slice(0, 2)}
                 </div>
@@ -327,6 +368,20 @@ export default function ItemDetailPage() {
                   {item.reporter_department && <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{item.reporter_department}</div>}
                 </div>
               </div>
+              {(item.contact_phone || item.reporter_phone) && item.type === 'lost' && (
+                <div style={{ 
+                  padding: '12px 14px', 
+                  background: 'rgba(212,146,42,0.1)', 
+                  borderLeft: '3px solid var(--gold)',
+                  borderRadius: '4px',
+                  marginTop: 12 
+                }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>Contact Phone</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--gold)' }}>
+                    {item.contact_phone || item.reporter_phone || 'Not provided'}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Actions */}

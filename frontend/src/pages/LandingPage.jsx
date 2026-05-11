@@ -55,6 +55,16 @@ function Hero() {
       }} />
 
       <div className="container" style={{ position: 'relative', textAlign: 'center' }}>
+        {/* University Logo */}
+        <div style={{ marginBottom: 32 }}>
+          <img src="/laikipia.logo.jpg" alt="Laikipia University" style={{ 
+            height: 80, 
+            width: 'auto',
+            borderRadius: 'var(--radius-lg)',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.15)'
+          }} />
+        </div>
+
         {/* Badge */}
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: 8,

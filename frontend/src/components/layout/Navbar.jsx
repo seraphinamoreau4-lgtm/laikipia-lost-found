@@ -167,8 +167,9 @@ export default function Navbar() {
                 </span>
               </Link>
 
-              <button onClick={handleLogout} className="btn btn-ghost" style={{ padding: '8px 10px', color: 'var(--danger)' }} title="Logout">
+              <button onClick={handleLogout} className="btn btn-ghost" style={{ padding: '8px 12px', color: 'var(--danger)', display: 'flex', alignItems: 'center', gap: 8 }} title="Logout">
                 <LogOut size={18} />
+                Sign Out
               </button>
             </>
           ) : (

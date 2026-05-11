@@ -48,6 +48,8 @@ router.post('/items', authenticate, upload.array('images', 5), itemsController.c
 router.put('/items/:id', authenticate, itemsController.updateItem);
 router.delete('/items/:id', authenticate, itemsController.deleteItem);
 router.post('/items/:id/claim', authenticate, upload.single('proof_image'), itemsController.claimItem);
+router.get('/claims/:id', authenticate, itemsController.getClaimById);
+router.post('/claims/:id/verify-identity', authenticate, upload.single('identity_document'), itemsController.submitIdentityVerification);
 
 // ─── CATEGORIES & LOCATIONS ───────────────────────────────────
 router.get('/categories', async (req, res) => {
@@ -87,6 +89,8 @@ router.get('/admin/users', authenticate, authorize('admin'), adminController.get
 router.put('/admin/users/:id', authenticate, authorize('admin'), adminController.updateUser);
 router.get('/admin/claims', authenticate, authorize('admin', 'security'), adminController.getClaims);
 router.put('/admin/claims/:id', authenticate, authorize('admin', 'security'), adminController.reviewClaim);
+router.put('/admin/claims/:id/verify-identity', authenticate, authorize('admin', 'security'), adminController.verifyIdentity);
+router.put('/admin/claims/:id/reject-identity', authenticate, authorize('admin', 'security'), adminController.rejectIdentity);
 router.get('/admin/audit-log', authenticate, authorize('admin'), adminController.getAuditLog);
 
 // ─── AI MATCH RE-RUN ──────────────────────────────────────────

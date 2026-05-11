@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { User, Mail, Phone, Building2, BadgeCheck, Edit3, Save, X, Lock } from 'lucide-react';
+import { User, Mail, Phone, Building2, BadgeCheck, Edit3, Save, X, Lock, LogOut } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { authAPI } from '../services/api';
@@ -8,7 +8,7 @@ import useAuthStore from '../store/authStore';
 import ItemCard from '../components/items/ItemCard';
 
 export default function ProfilePage() {
-  const { user, updateUser, fetchMe } = useAuthStore();
+  const { user, updateUser, fetchMe, logout } = useAuthStore();
   const [editing, setEditing] = useState(false);
   const [changingPass, setChangingPass] = useState(false);
   const [form, setForm] = useState({ full_name: user?.full_name || '', phone: user?.phone || '', department: user?.department || '' });
@@ -99,6 +99,9 @@ export default function ProfilePage() {
                 <Link to="/report?type=lost" className="btn btn-outline btn-sm" style={{ justifyContent: 'center' }}>Report Lost Item</Link>
                 <Link to="/report?type=found" className="btn btn-outline btn-sm" style={{ justifyContent: 'center' }}>Report Found Item</Link>
                 <Link to="/messages" className="btn btn-outline btn-sm" style={{ justifyContent: 'center' }}>Messages</Link>
+                <button onClick={() => { logout(); window.location.href = '/'; }} className="btn btn-danger btn-sm" style={{ justifyContent: 'center', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <LogOut size={14} /> Sign Out
+                </button>
               </div>
             </div>
           </div>

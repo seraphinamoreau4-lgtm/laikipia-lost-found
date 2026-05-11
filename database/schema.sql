@@ -2,136 +2,141 @@
 -- LAIKIPIA UNIVERSITY LOST & FOUND SYSTEM — DATABASE SCHEMA
 -- ============================================================
 
-CREATE DATABASE IF NOT EXISTS laikipia_lost_found CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE laikipia_lost_found;
-
 -- USERS TABLE
 CREATE TABLE IF NOT EXISTS users (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  student_id VARCHAR(30) UNIQUE,
-  full_name VARCHAR(120) NOT NULL,
-  email VARCHAR(150) UNIQUE NOT NULL,
-  password_hash VARCHAR(255) NOT NULL,
-  role ENUM('student', 'staff', 'admin', 'security') DEFAULT 'student',
-  department VARCHAR(100),
-  phone VARCHAR(20),
-  avatar_url VARCHAR(255),
-  is_verified BOOLEAN DEFAULT FALSE,
-  is_active BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  student_id TEXT UNIQUE,
+  full_name TEXT NOT NULL,
+  email TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  role TEXT DEFAULT 'student' CHECK (role IN ('student', 'staff', 'admin', 'security')),
+  department TEXT,
+  phone TEXT,
+  avatar_url TEXT,
+  is_verified INTEGER DEFAULT 0,
+  is_active INTEGER DEFAULT 1,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- CATEGORIES TABLE
 CREATE TABLE IF NOT EXISTS categories (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(80) NOT NULL,
-  icon VARCHAR(50),
-  color VARCHAR(20),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  icon TEXT,
+  color TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- CAMPUS LOCATIONS TABLE
 CREATE TABLE IF NOT EXISTS locations (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(100) NOT NULL,
-  building VARCHAR(100),
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  building TEXT,
   description TEXT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ITEMS TABLE (lost & found)
 CREATE TABLE IF NOT EXISTS items (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT NOT NULL,
-  type ENUM('lost', 'found') NOT NULL,
-  title VARCHAR(200) NOT NULL,
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  type TEXT NOT NULL CHECK (type IN ('lost', 'found')),
+  title TEXT NOT NULL,
   description TEXT NOT NULL,
-  category_id INT,
-  location_id INT,
-  location_detail VARCHAR(255),
+  category_id INTEGER,
+  location_id INTEGER,
+  location_detail TEXT,
   date_occurred DATE NOT NULL,
-  status ENUM('open', 'matched', 'resolved', 'archived') DEFAULT 'open',
-  is_valuable BOOLEAN DEFAULT FALSE,
-  reward_offered BOOLEAN DEFAULT FALSE,
-  reward_amount DECIMAL(10,2),
-  ai_tags JSON,
-  view_count INT DEFAULT 0,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  status TEXT DEFAULT 'open' CHECK (status IN ('open', 'matched', 'resolved', 'archived')),
+  is_valuable INTEGER DEFAULT 0,
+  reward_offered INTEGER DEFAULT 0,
+  reward_amount REAL,
+  ai_tags TEXT,
+  view_count INTEGER DEFAULT 0,
+  contact_phone TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (category_id) REFERENCES categories(id),
-  FOREIGN KEY (location_id) REFERENCES locations(id),
-  INDEX idx_type (type),
-  INDEX idx_status (status),
-  INDEX idx_created (created_at DESC)
+  FOREIGN KEY (location_id) REFERENCES locations(id)
 );
+
+CREATE INDEX IF NOT EXISTS idx_type ON items(type);
+CREATE INDEX IF NOT EXISTS idx_status ON items(status);
+CREATE INDEX IF NOT EXISTS idx_created ON items(created_at DESC);
 
 -- ITEM IMAGES TABLE
 CREATE TABLE IF NOT EXISTS item_images (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  item_id INT NOT NULL,
-  url VARCHAR(255) NOT NULL,
-  is_primary BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  item_id INTEGER NOT NULL,
+  url TEXT NOT NULL,
+  is_primary INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE
 );
 
 -- AI MATCHES TABLE
 CREATE TABLE IF NOT EXISTS ai_matches (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  lost_item_id INT NOT NULL,
-  found_item_id INT NOT NULL,
-  confidence_score DECIMAL(5,2) NOT NULL,
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  lost_item_id INTEGER NOT NULL,
+  found_item_id INTEGER NOT NULL,
+  confidence_score REAL NOT NULL,
   ai_reasoning TEXT,
-  status ENUM('pending', 'confirmed', 'rejected') DEFAULT 'pending',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'rejected')),
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (lost_item_id) REFERENCES items(id) ON DELETE CASCADE,
   FOREIGN KEY (found_item_id) REFERENCES items(id) ON DELETE CASCADE,
-  UNIQUE KEY unique_match (lost_item_id, found_item_id)
+  UNIQUE(lost_item_id, found_item_id)
 );
 
 -- MESSAGES TABLE
 CREATE TABLE IF NOT EXISTS messages (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  sender_id INT NOT NULL,
-  receiver_id INT NOT NULL,
-  item_id INT,
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  sender_id INTEGER NOT NULL,
+  receiver_id INTEGER NOT NULL,
+  item_id INTEGER,
   content TEXT NOT NULL,
-  is_read BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  is_read INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE SET NULL,
-  INDEX idx_conversation (sender_id, receiver_id)
+  FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE SET NULL
 );
+
+CREATE INDEX IF NOT EXISTS idx_conversation ON messages(sender_id, receiver_id);
 
 -- NOTIFICATIONS TABLE
 CREATE TABLE IF NOT EXISTS notifications (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT NOT NULL,
-  type ENUM('match_found', 'message_received', 'item_resolved', 'claim_request', 'system') NOT NULL,
-  title VARCHAR(200) NOT NULL,
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  type TEXT NOT NULL CHECK (type IN ('match_found', 'message_received', 'item_resolved', 'claim_request', 'system')),
+  title TEXT NOT NULL,
   body TEXT,
-  data JSON,
-  is_read BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  INDEX idx_user_unread (user_id, is_read)
+  data TEXT,
+  is_read INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- CLAIMS TABLE
+CREATE INDEX IF NOT EXISTS idx_user_unread ON notifications(user_id, is_read);
+
+-- CLAIMS TABLE (with identity verification)
 CREATE TABLE IF NOT EXISTS claims (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  item_id INT NOT NULL,
-  claimant_id INT NOT NULL,
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  item_id INTEGER NOT NULL,
+  claimant_id INTEGER NOT NULL,
   proof_description TEXT NOT NULL,
-  proof_image_url VARCHAR(255),
-  status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+  proof_image_url TEXT,
+  identity_document_url TEXT,
+  identity_verification_status TEXT DEFAULT 'pending' CHECK (identity_verification_status IN ('pending', 'verified', 'rejected')),
+  verification_questions TEXT,
+  verification_answers_hash TEXT,
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
   admin_note TEXT,
-  reviewed_by INT,
-  reviewed_at TIMESTAMP NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  reviewed_by INTEGER,
+  reviewed_at DATETIME,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE,
   FOREIGN KEY (claimant_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (reviewed_by) REFERENCES users(id) ON DELETE SET NULL
@@ -139,16 +144,17 @@ CREATE TABLE IF NOT EXISTS claims (
 
 -- AUDIT LOG TABLE
 CREATE TABLE IF NOT EXISTS audit_log (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT,
-  action VARCHAR(100) NOT NULL,
-  entity_type VARCHAR(50),
-  entity_id INT,
-  details JSON,
-  ip_address VARCHAR(45),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  INDEX idx_created (created_at DESC)
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER,
+  action TEXT NOT NULL,
+  entity_type TEXT,
+  entity_id INTEGER,
+  details TEXT,
+  ip_address TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE INDEX IF NOT EXISTS idx_created_audit ON audit_log(created_at DESC);
 
 -- ============================================================
 -- SEED DATA
@@ -184,6 +190,6 @@ INSERT INTO locations (name, building, description) VALUES
 -- Default admin user (password: Admin@1234)
 INSERT INTO users (student_id, full_name, email, password_hash, role, is_verified) VALUES
 ('ADMIN001', 'System Administrator', 'admin@laikipia.ac.ke',
- '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtG9MEo5A8xB5mAi7FqZoQr3eCLu', 'admin', TRUE),
+ '$2b$12$GXrf0HJNIWPc7yOZxVBBlOhVMVg7Gb6mcRdQu0XXM8MQgXReTb6m2', 'admin', 1),
 ('SEC001', 'Security Office', 'security@laikipia.ac.ke',
- '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtG9MEo5A8xB5mAi7FqZoQr3eCLu', 'security', TRUE);
+ '$2b$12$GXrf0HJNIWPc7yOZxVBBlOhVMVg7Gb6mcRdQu0XXM8MQgXReTb6m2', 'security', 1);

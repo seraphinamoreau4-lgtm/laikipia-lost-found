@@ -104,6 +104,7 @@ export default function ReportPage() {
     is_valuable: false,
     reward_offered: false,
     reward_amount: '',
+    contact_phone: '',
   });
 
   useEffect(() => {
@@ -192,12 +193,6 @@ export default function ReportPage() {
                 ))}
               </div>
 
-              <div style={{ padding: '14px 16px', background: 'var(--gold-pale)', border: '1px solid var(--sand)', borderRadius: 'var(--radius-md)', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                <Sparkles size={16} color="var(--gold)" style={{ marginTop: 2, flexShrink: 0 }} />
-                <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                  <strong>AI Matching Enabled:</strong> Once submitted, our Claude-powered engine will scan all existing reports for potential matches and notify you instantly.
-                </p>
-              </div>
             </div>
           )}
 
@@ -282,6 +277,16 @@ export default function ReportPage() {
                     onChange={e => set('reward_amount', e.target.value)} placeholder="e.g. 500" style={{ maxWidth: 200 }} />
                 </div>
               )}
+
+              <div className="form-group">
+                <label className="form-label">Contact Phone Number</label>
+                <input className="form-input" type="tel" value={form.contact_phone}
+                  onChange={e => set('contact_phone', e.target.value)}
+                  placeholder="+254 7XX XXX XXX or leave blank to use profile phone" />
+                <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                  {form.type === 'lost' ? 'This phone will be shown to finders who want to contact you' : 'Optional - for verification purposes'}
+                </span>
+              </div>
             </div>
           )}
 

@@ -15,28 +15,41 @@ const generateTokens = (userId) => {
 // POST /api/auth/register
 const register = async (req, res) => {
   try {
-    const { full_name, email, password, student_id, role, department, phone } = req.body;
+    let { full_name, email, password, student_id, role, department, phone } = req.body;
+    if (!full_name || !email || !password) {
+      return res.status(400).json({ success: false, message: 'Full name, email, and password are required' });
+    }
 
-    // Check if email exists
-    const existing = await queryOne('SELECT id FROM users WHERE email = ? OR student_id = ?', [email, student_id || '']);
+    full_name = String(full_name).trim();
+    email = String(email).trim().toLowerCase();
+    student_id = student_id ? String(student_id).trim() : null;
+    department = department ? String(department).trim() : null;
+    phone = phone ? String(phone).trim() : null;
+
+    const existing = await queryOne(
+      'SELECT id FROM users WHERE email = ? OR (student_id IS NOT NULL AND student_id = ?)',
+      [email, student_id]
+    );
     if (existing) {
       return res.status(409).json({ success: false, message: 'Email or Student ID already registered' });
     }
 
     const allowedRoles = ['student', 'staff'];
     const userRole = allowedRoles.includes(role) ? role : 'student';
-
     const passwordHash = await bcrypt.hash(password, 12);
 
     const result = await query(
       `INSERT INTO users (full_name, email, password_hash, student_id, role, department, phone, is_verified)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [full_name, email, passwordHash, student_id || null, userRole, department || null, phone || null, true]
+      [full_name, email, passwordHash, student_id, userRole, department, phone, 1]
     );
 
-    const userId = result.insertId;
-    const { accessToken, refreshToken } = generateTokens(userId);
+    const userId = result.insertId ?? result.lastID;
+    if (!userId) {
+      throw new Error('Failed to create user account');
+    }
 
+    const { accessToken, refreshToken } = generateTokens(userId);
     const user = await queryOne(
       'SELECT id, full_name, email, role, student_id, department, avatar_url FROM users WHERE id = ?',
       [userId]
@@ -45,6 +58,9 @@ const register = async (req, res) => {
     res.status(201).json({ success: true, message: 'Account created successfully', data: { user, accessToken, refreshToken } });
   } catch (err) {
     console.error('Register error:', err);
+    if (err.code === 'SQLITE_CONSTRAINT') {
+      return res.status(409).json({ success: false, message: 'Email or Student ID already registered' });
+    }
     res.status(500).json({ success: false, message: 'Registration failed' });
   }
 };
