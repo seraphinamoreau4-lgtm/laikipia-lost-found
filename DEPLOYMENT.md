@@ -35,7 +35,7 @@ git push -u origin main
 1. Go to [render.com](https://render.com) and sign up
 2. Click **"New +"** → **"Blueprint"**
 3. Select **"Public Git Repository"**
-4. Paste: `https://github.com/seraphinamoreau4-lgtm/laikipia-lost-found.git`
+4. Paste your GitHub repository URL (from your GitHub repo settings)
 5. Render automatically reads `render.yaml` and deploys everything!
 6. Set environment variables:
    - `JWT_SECRET`: Generate a secure random string (or let Render generate it)
