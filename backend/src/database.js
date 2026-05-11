@@ -1,27 +1,21 @@
-const sqlite3 = require('sqlite3').verbose();
-const { promisify } = require('util');
+const { Pool } = require('pg');
 
-const dbPath = process.env.DB_PATH || './database/laikipia_lost_found.db';
-
-// Create database connection
-const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) {
-    console.error('❌ Database connection failed:', err.message);
-    process.exit(1);
-  }
-  console.log('✅ Database connected successfully');
+// PostgreSQL connection pool
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });
 
-// Promisify database methods
-const dbAll = promisify(db.all.bind(db));
-const dbGet = promisify(db.get.bind(db));
-const dbRun = promisify(db.run.bind(db));
+pool.on('error', (err) => {
+  console.error('❌ Unexpected error on idle client', err);
+  process.exit(-1);
+});
 
 // Test connection on startup
 async function testConnection() {
   try {
-    await dbGet('SELECT 1');
-    console.log('✅ Database connected successfully');
+    const result = await pool.query('SELECT NOW()');
+    console.log('✅ Database connected successfully:', result.rows[0]);
   } catch (err) {
     console.error('❌ Database connection failed:', err.message);
     process.exit(1);
@@ -30,44 +24,40 @@ async function testConnection() {
 
 // Helper query function
 async function query(sql, params = []) {
-  const upper = sql.trim().toUpperCase();
-  if (upper.startsWith('SELECT') || upper.startsWith('PRAGMA')) {
-    return await dbAll(sql, params);
+  try {
+    const result = await pool.query(sql, params);
+    return result.rows;
+  } catch (err) {
+    console.error('❌ Query error:', err);
+    throw err;
   }
-
-  return await new Promise((resolve, reject) => {
-    const stmt = db.run(sql, params, function (err) {
-      if (err) return reject(err);
-      const result = { lastID: this.lastID, changes: this.changes };
-      if (result.lastID !== undefined) {
-        result.insertId = result.lastID;
-      }
-      resolve(result);
-    });
-  });
 }
 
 // Helper for single row
 async function queryOne(sql, params = []) {
-  return await dbGet(sql, params);
+  try {
+    const result = await pool.query(sql, params);
+    return result.rows[0] || null;
+  } catch (err) {
+    console.error('❌ Query error:', err);
+    throw err;
+  }
 }
 
 // Transaction helper
 async function transaction(callback) {
-  return new Promise((resolve, reject) => {
-    db.run('BEGIN TRANSACTION', async (err) => {
-      if (err) return reject(err);
-      try {
-        const result = await callback(db);
-        db.run('COMMIT', (err) => {
-          if (err) reject(err);
-          else resolve(result);
-        });
-      } catch (err) {
-        db.run('ROLLBACK', () => reject(err));
-      }
-    });
-  });
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const result = await callback(client);
+    await client.query('COMMIT');
+    return result;
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
 }
 
-module.exports = { testConnection, query, queryOne, transaction };
+module.exports = { testConnection, query, queryOne, transaction, pool };
